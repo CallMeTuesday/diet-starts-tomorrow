@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Real git pre-commit hook. Runs on EVERY commit to this repo, by any tool,
+# including plain `git commit` in a terminal with no agent involved.
+#
+# This exists because the Claude Code hooks in .claude/ are loaded at session
+# start. Ones added mid-session sit dormant, so a guard can look installed,
+# pass a direct invocation test, and still never fire. That happened. A guard
+# you believe is running but isn't is worse than no guard, because it buys
+# false confidence.
+#
+# Enabled via `git config core.hooksPath scripts/git-hooks`, which is why this
+# lives in a tracked directory rather than .git/hooks.
+set -uo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+if ! "$ROOT/scripts/gate.sh"; then
+  echo
+  echo "COMMIT BLOCKED: the gate is red. Fix it rather than bypassing." >&2
+  echo "Bypassing needs --no-verify, which the commit-discipline rule forbids." >&2
+  exit 1
+fi
+exit 0

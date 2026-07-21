@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Diet Starts Tomorrow</title>
+<style>
+  :root{
+    --bg:#0e1113;
+    --card:#171b1e;
+    --card-2:#1e2429;
+    --line:#2a3238;
+    --ink:#e8edf0;
+    --ink-dim:#98a4ac;
+    --ink-faint:#6b7780;
+    --accent:#5fd39a;
+    --accent-ink:#0a1a12;
+    --warn:#f0b45e;
+    --radius:14px;
+    --pad:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+    padding:0 0 48px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 12px}
+  h1,h2,h3{margin:0;line-height:1.25}
+  p{margin:0}
+  ul{margin:0;padding-left:20px}
+  li{margin:6px 0}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+  /* Header */
+  header{padding:22px 0 14px}
+  .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-size:26px;font-weight:700;letter-spacing:-.01em;margin-top:4px;overflow-wrap:anywhere}
+  .date{color:var(--ink-dim);font-size:14px;margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{
+    font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;
+    background:var(--card-2);color:var(--ink-dim);border:1px solid var(--line);
+  }
+
+  /* Day strip */
+  .days{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+    margin:4px 0 20px;
+  }
+  .day{
+    min-height:52px;border-radius:10px;background:var(--card);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    font-size:12px;font-weight:600;color:var(--ink-dim);padding:4px 0;
+  }
+  .day .dot{width:4px;height:4px;border-radius:50%;background:transparent}
+  .day.is-today .dot{background:var(--accent)}
+  .day[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .day[aria-pressed="true"] .dot{background:var(--accent-ink)}
+
+  /* Cards */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:var(--pad);margin-bottom:12px;
+  }
+  .card h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+  .title{font-size:19px;font-weight:700;overflow-wrap:anywhere}
+  .sub{color:var(--ink-dim);font-size:14px;margin-top:2px}
+  .block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .block:first-of-type{border-top:0;padding-top:0;margin-top:12px}
+  .label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .note{
+    margin-top:12px;padding:10px 12px;border-radius:10px;
+    background:var(--card-2);border-left:3px solid var(--warn);
+    font-size:14px;color:var(--ink-dim);
+  }
+  .note.ctx{border-left-color:var(--ink-faint)}
+  .cues{margin-top:10px;font-size:13px;color:var(--ink-dim)}
+  a.ex{
+    color:var(--ink);text-decoration:underline;
+    text-decoration-color:rgba(95,211,154,.45);text-underline-offset:3px;
+    display:inline-block;padding:6px 0;
+  }
+  a.ex:active{color:var(--accent)}
+  a.ex::after{content:"\2197";font-size:.75em;color:var(--ink-faint);margin-left:3px;vertical-align:super}
+  .dose{color:var(--ink-dim)}
+
+  /* Meals */
+  .meal{display:flex;gap:12px;align-items:flex-start}
+  .meal-body{flex:1;min-width:0}
+  .slot{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  .meal-text{margin-top:4px;overflow-wrap:anywhere}
+  .badge{
+    flex:none;font-size:13px;font-weight:700;padding:4px 9px;border-radius:8px;
+    background:rgba(95,211,154,.14);color:var(--accent);border:1px solid rgba(95,211,154,.28);
+    white-space:nowrap;
+  }
+  .reroll{
+    margin-top:10px;min-height:44px;padding:6px 14px;border-radius:999px;
+    background:var(--card-2);border:1px solid var(--line);
+    font-size:13px;font-weight:600;color:var(--ink-dim);
+  }
+  .reroll:active{background:var(--line)}
+  .variant-of{font-size:12px;color:var(--ink-faint);margin-left:8px}
+
+  /* Total */
+  .total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .total .big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .total .goal{font-size:13px;color:var(--ink-faint)}
+  .dairy{margin-top:10px;font-size:14px;color:var(--ink-dim)}
+  .dairy strong{color:var(--ink)}
+
+
+  footer{text-align:center;color:var(--ink-faint);font-size:12px;padding:20px 8px 0;line-height:1.6}
+  .reset{
+    display:block;margin:0 auto 14px;padding:8px 14px;min-height:44px;
+    font-size:13px;color:var(--ink-faint);text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="dayTitle"></h1>
+    <div class="date" id="dayDate"></div>
+    <div class="chips">
+      <span class="chip" id="chipMenu"></span>
+      <span class="chip" id="chipRamp"></span>
+    </div>
+  </header>
+
+  <nav class="days" id="dayStrip" aria-label="Choose a day"></nav>
+
+  <main id="main"></main>
+
+  <button class="reset" id="resetBtn" type="button">reset rerolls</button>
+
+  <footer>
+    Menus refresh weekly. 180 meals, 6 per slot. Bored? Reroll any meal.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ------------------------------------------------------------------ *
+   * DATA. Keyed by JS getDay(): 0 = Sunday ... 6 = Saturday.
+   * Workouts are verbatim from the spec. The MEAL BANK below is GENERATED
+   * from scripts/bank.json + scripts/components.js by scripts/build-meals.js.
+   * Every protein number is the sum of that meal's components, never typed by
+   * hand. Do not edit the generated block: edit the bank and rebuild, or the
+   * gate will fail. See CLAUDE.md.
+   * ------------------------------------------------------------------ */
+  var ROW_CUES = "Stroke rate 18–20. Nose breathing only, full sentences. If you can't talk, " +
+                 "you're going too hard. Form: legs → back → arms; reverse on recovery; flat back always.";
+
+  var RAMP = [ [20,15],[25,20],[30,25],[35,25],[40,30],[45,35],[50,35],[60,40] ];
+
+  var DAYS = {
+    0: {
+      key:"sun", name:"SUNDAY", theme:"Long Row + Cook",
+      workout:{
+        title:"LONG ROW + COOK",
+        rows:"long"
+      },
+      notes:["Cook for the week. Weigh yourself — same time, same conditions."],
+    },
+    1: {
+      key:"mon", name:"MONDAY", theme:"Push + Dance",
+      workout:{
+        title:"PUSH", duration:"15 min", structure:"3 rounds, 75s rest",
+        exercises:[
+          {n:"Push-ups", d:"×8–15"},
+          {n:"Pike push-ups", d:"×6–10"},
+          {n:"Chair dips", d:"×8–12", q:"chair dips triceps form"},
+          {n:"Wall handstand hold", d:"30–45s"}
+        ],
+        finisher:{label:"Finish", n:"Bottom-of-push-up hold", d:"2×20s", q:"bottom of pushup hold isometric"},
+        warning:"Stop every set 2 reps shy of failure — you dance tonight.",
+        context:"Dance class 6pm, 90 min."
+      },
+      notes:[],
+    },
+    2: {
+      key:"tue", name:"TUESDAY", theme:"Pull + Row",
+      workout:{
+        title:"PULL", duration:"20 min", structure:"3 rounds, 60s rest",
+        exercises:[
+          {n:"Single-arm household weight row", d:"×8–12/side", q:"single arm dumbbell row form"},
+          {n:"Superman + reverse snow angel", d:"×12", q:"superman reverse snow angel exercise"},
+          {n:"Hollow body hold", d:"20–40s"},
+          {n:"Side plank", d:"30s/side"},
+          {n:"Dead bug", d:"×8/side slow", q:"dead bug exercise form"}
+        ],
+        rows:"short"
+      },
+      notes:["Strength first, then row. If lats/grip are cooked, move the row to Wednesday."],
+    },
+    3: {
+      key:"wed", name:"WEDNESDAY", theme:"Legs",
+      workout:{
+        title:"LEGS", duration:"25 min", structure:"3 rounds, 90s rest",
+        exercises:[
+          {n:"Bulgarian split squat", d:"×8–12/leg"},
+          {n:"Pistol progression", d:"×5–8/leg", q:"pistol squat progression"},
+          {n:"Single-leg RDL", d:"×8/leg", q:"single leg romanian deadlift form"},
+          {n:"Single-leg hip thrust", d:"×12–15/side"},
+          {n:"Calf raises", d:"×15–20"}
+        ],
+        finisher:{label:"Mandatory finisher", n:"Couch stretch", d:"60s/side"}
+      },
+      notes:[],
+    },
+    4: {
+      key:"thu", name:"THURSDAY", theme:"Conditioning + Breath",
+      workout:{
+        title:"CONDITIONING", duration:"15 min", structure:"3 rounds, 40s on / 20s off",
+        exercises:[
+          {n:"Burpees"},
+          {n:"Jump squats"},
+          {n:"Mountain climbers"},
+          {n:"Skater bounds", q:"skater bounds plyometric"}
+        ],
+        breath:{
+          title:"BREATH WORK (5 min, non-negotiable)",
+          items:[
+            {n:"Nasal-only easy movement", d:"2 min", q:"nasal breathing during exercise"},
+            {n:"Box breathing", d:"4-4-4-4 ×8", q:"box breathing technique"},
+            {n:"CO2 tolerance test", d:"exhale fully, hold, count, log it", q:"CO2 tolerance test breath hold"}
+          ]
+        }
+      },
+      notes:["Optional third row (30 min) here only during endurance blocks."],
+    },
+    5: {
+      key:"fri", name:"FRIDAY", theme:"Dance + Session",
+      workout:{
+        title:"DANCE + SESSION",
+        headline:"No strength — you're dancing 3+ hrs.",
+        context:"Dance class 6pm 90 min + session 1–2 hrs."
+      },
+      notes:["Biggest carb day — eat the rice."],
+    },
+    6: {
+      key:"sat", name:"SATURDAY", theme:"Hot Yoga",
+      workout:{
+        title:"HOT YOGA", duration:"90 min", context:"9am."
+      },
+      notes:["Hydrate hard, salt your food. Yoga is mobility, not cardio — it doesn't count toward your aerobic base."],
+    }
+  };
+
+  /* ==== GENERATED MEAL BANK, do not edit by hand ==== */
+  var MEALS = {
+    0: {  // sun
+      breakfast: { label:"Breakfast", time:"9:00", variants:[
+        {t:"3 eggs, halloumi, sautéed spinach, tomato, walnuts", p:42},
+        {t:"Greek yogurt, steel-cut oats, hemp hearts, blueberries", p:40},
+        {t:"Skyr, 2 eggs, sautéed beet greens, pomegranate seeds", p:42},
+        {t:"Cottage cheese, sourdough, pumpkin seeds, sautéed chard", p:46},
+        {t:"Whey, steel-cut oats, almond butter, chia, milk", p:50},
+        {t:"Sardines, 2 eggs, tomato, avocado, walnuts, garlic", p:43},
+      ]},
+      lunch: { label:"Lunch", time:"13:00", variants:[
+        {t:"Sirloin, roasted squash, sautéed chard, garlic, olive oil", p:54},
+        {t:"Chicken thigh, asparagus, roasted beets, tomato", p:51},
+        {t:"Salmon, white beans, garlicky kale, garlic, lemon", p:54},
+        {t:"Roast haddock, chickpeas, sautéed spinach, tomato", p:54},
+        {t:"Ground turkey, fava beans, sautéed chard, garlic, olive oil", p:54},
+        {t:"Lamb loin, edamame, sautéed beet greens, tomato", p:52},
+      ]},
+      snack: { label:"Snack", time:"16:00", variants:[
+        {t:"Sardines, tomato, lemon", p:24},
+        {t:"Cottage cheese, almonds, figs", p:20},
+        {t:"Greek yogurt, cinnamon", p:22},
+        {t:"2 eggs, pumpkin seeds", p:22},
+        {t:"Anchovies, hemp hearts, tomato", p:25},
+        {t:"Skyr, blackberries", p:26},
+      ]},
+      dinner: { label:"Dinner", time:"19:00", variants:[
+        {t:"Chicken thigh stew, garlicky kale, garlic, herbs, olive oil", p:48},
+        {t:"Ground beef stew, tomato, sautéed chard, olive oil", p:49},
+        {t:"Atlantic mackerel, sautéed beet greens, garlic, lemon", p:47},
+        {t:"Pork tenderloin, roasted squash, brussels sprouts", p:50},
+        {t:"Merguez stew, lentils, fava beans, sautéed spinach", p:42},
+        {t:"Trout, asparagus, roasted beets, olive oil", p:46},
+      ]},
+    },
+    1: {  // mon
+      breakfast: { label:"Breakfast", time:"8:00", variants:[
+        {t:"3 eggs, feta, sautéed spinach, tomato, walnuts, sourdough, olive oil", p:37},
+        {t:"Greek yogurt, steel-cut oats, walnuts, blueberries, cinnamon", p:34},
+        {t:"Cottage cheese, steel-cut oats, walnuts, cinnamon", p:36},
+        {t:"Skyr, chia, almonds, blackberries, cinnamon", p:36},
+        {t:"Whey smoothie: banana, almond butter, chia, cinnamon", p:36},
+        {t:"Grilled halloumi, sautéed spinach, tomato, sourdough, pumpkin seeds, olive oil", p:36},
+      ]},
+      pre: { label:"Pre-workout", time:"11:00", variants:[
+        {t:"Greek yogurt, blueberries", p:23},
+        {t:"Cottage cheese, figs, walnuts, pistachios", p:24},
+        {t:"2 eggs, sourdough, avocado, tomato, feta", p:24},
+        {t:"Whey smoothie, banana", p:25},
+        {t:"Skyr, strawberries", p:25},
+        {t:"Anchovies on sourdough, tomato, feta, olive oil", p:23},
+      ]},
+      lunch: { label:"Lunch", time:"12:30", variants:[
+        {t:"Chicken breast, bulgur, sautéed chard, tomato, olive oil", p:55},
+        {t:"Salmon, lentils, sautéed spinach, olive oil, lemon", p:56},
+        {t:"Shrimp, farro, roasted beets, tomato, olive oil", p:53},
+        {t:"Canned skipjack tuna, chickpeas, wilted arugula, walnuts, lemon, olive oil", p:49},
+        {t:"Sirloin, roasted root vegetables, garlicky kale, garlic, olive oil", p:55},
+        {t:"Grilled octopus, white beans, sautéed beet greens, olive oil, lemon", p:54},
+      ]},
+      snack: { label:"Pre-class", time:"17:00", variants:[
+        {t:"Kefir, chia", p:13},
+        {t:"Cottage cheese, strawberries", p:14},
+        {t:"2 eggs, tomato", p:14},
+        {t:"Oysters, pistachios", p:14},
+        {t:"Chickpeas, feta, olives, olive oil", p:12},
+        {t:"Edamame, walnuts", p:13},
+      ]},
+      dinner: { label:"Dinner", time:"20:00", variants:[
+        {t:"Salmon, sautéed chard, garlic, lemon, olive oil", p:39},
+        {t:"Sardines, white beans, sautéed spinach, olive oil", p:36},
+        {t:"Anchovies, lentils, garlicky kale, feta, tomato, olive oil", p:32},
+        {t:"Mussels, farro, sautéed beet greens, olive oil", p:36},
+        {t:"Chicken sausage, broccoli, white beans, olive oil", p:34},
+        {t:"Merguez, chickpeas, garlicky kale, tomato, olive oil", p:33},
+      ]},
+    },
+    2: {  // tue
+      breakfast: { label:"Breakfast", time:"8:00", variants:[
+        {t:"3 eggs, Greek yogurt, sautéed spinach, tomato", p:47},
+        {t:"Skyr, steel-cut oats, walnuts, chia", p:39},
+        {t:"Cottage cheese, blueberries, walnuts, sourdough", p:38},
+        {t:"Whey shake, banana, almond butter, milk", p:40},
+        {t:"Salmon, sautéed beet greens, avocado, tomato, lemon", p:42},
+        {t:"Sardines, 2 eggs, sautéed spinach, tomato", p:42},
+      ]},
+      lunch: { label:"Lunch", time:"12:00", variants:[
+        {t:"Chicken thigh, roasted beets, olive oil, lemon, herbs", p:47},
+        {t:"Salmon, asparagus, olive oil, lemon", p:45},
+        {t:"Shrimp, sautéed spinach, tomato, garlic, olive oil, lemon", p:47},
+        {t:"Ground beef, sautéed peppers, sautéed beet greens, olive oil", p:49},
+        {t:"Grilled octopus, roasted beets, olive oil, lemon, herbs", p:45},
+        {t:"Canned salmon, white beans, wilted arugula, olive oil", p:46},
+      ]},
+      snack: { label:"Snack", time:"15:00", variants:[
+        {t:"Greek yogurt, walnuts", p:26},
+        {t:"Skyr, chia", p:28},
+        {t:"Cottage cheese, 2 eggs, herbs", p:26},
+        {t:"Whey shake, walnuts", p:28},
+        {t:"Chickpeas, grilled halloumi, walnuts, olive oil", p:24},
+        {t:"Sardines, walnuts", p:27},
+      ]},
+      dinner: { label:"Dinner", time:"19:00", variants:[
+        {t:"Sirloin, garlicky kale, olive oil, herbs", p:52},
+        {t:"Salmon, chickpeas, sautéed chard, olive oil, lemon", p:53},
+        {t:"Lamb loin, white beans, sautéed spinach, olive oil, herbs", p:51},
+        {t:"Pork tenderloin, broccoli, roasted beets, olive oil", p:51},
+        {t:"Trout, edamame, sautéed chard, lemon, herbs", p:53},
+        {t:"Atlantic mackerel, broccoli, roasted root vegetables, olive oil", p:50},
+      ]},
+    },
+    3: {  // wed
+      breakfast: { label:"Breakfast", time:"8:00", variants:[
+        {t:"3 eggs, halloumi, sautéed spinach, tomato, olive oil, herbs", p:38},
+        {t:"Greek yogurt, walnuts, hemp hearts, chia, blueberries", p:41},
+        {t:"Skyr, pumpkin seeds, strawberries, chia", p:38},
+        {t:"Cottage cheese, steel-cut oats, walnuts, blackberries", p:38},
+        {t:"Sardines, sourdough, avocado, tomato, pumpkin seeds, olive oil", p:39},
+        {t:"Whey, steel-cut oats, walnuts, banana, cinnamon", p:36},
+      ]},
+      lunch: { label:"Lunch", time:"12:00", variants:[
+        {t:"Chicken breast, sautéed spinach, olives, garlic, lemon, olive oil", p:59},
+        {t:"Sirloin, roasted root vegetables, sautéed chard, tomato, garlic", p:56},
+        {t:"Shrimp, quinoa, sautéed spinach, tomato, olives, olive oil", p:56},
+        {t:"Grilled octopus, white beans, garlicky kale, olives, olive oil, lemon", p:55},
+        {t:"Atlantic mackerel, farro, sautéed beet greens, olive oil, lemon, herbs", p:55},
+        {t:"Lamb loin, chickpeas, roasted root vegetables, feta, tomato, olive oil", p:53},
+      ]},
+      snack: { label:"Snack", time:"15:00", variants:[
+        {t:"Sardines, tomato, lemon, herbs", p:24},
+        {t:"Greek yogurt, pomegranate seeds", p:23},
+        {t:"Mussels, olives, lemon, garlic", p:25},
+        {t:"2 eggs, pumpkin seeds", p:22},
+        {t:"Skyr, cinnamon", p:24},
+        {t:"Anchovies, almonds, tomato, lemon", p:21},
+      ]},
+      dinner: { label:"Dinner", time:"19:00", variants:[
+        {t:"Pork tenderloin, brussels sprouts, garlic, herbs, olive oil", p:48},
+        {t:"Ground beef, zucchini noodles, tomato, garlic, olive oil", p:47},
+        {t:"Chicken thigh, sautéed chard, avocado, lemon, herbs", p:50},
+        {t:"Scallops, garlicky kale, walnuts, olive oil, lemon", p:43},
+        {t:"Seared scallops, cauliflower rice, sautéed spinach, olive oil, lemon", p:42},
+        {t:"Ground turkey, broccoli, tomato, olive oil, herbs", p:48},
+      ]},
+    },
+    4: {  // thu
+      breakfast: { label:"Breakfast", time:"8:00", variants:[
+        {t:"3 eggs, sautéed spinach, feta, walnuts, sourdough, tomato", p:37},
+        {t:"Greek yogurt, hemp hearts, blueberries, walnuts", p:37},
+        {t:"Sardines, 2 eggs, sautéed chard, tomato, garlic, olive oil", p:41},
+        {t:"Cottage cheese, walnuts, blueberries, steel-cut oats", p:37},
+        {t:"Whey, banana, almond butter, chia, milk", p:44},
+        {t:"Halloumi, chickpeas, sautéed spinach, walnuts, almonds, tomato", p:36},
+      ]},
+      lunch: { label:"Lunch", time:"12:00", variants:[
+        {t:"Sirloin, sautéed peppers, sautéed beet greens, olive oil, lemon", p:53},
+        {t:"Salmon, chickpeas, sautéed spinach, lemon, herbs", p:54},
+        {t:"Chicken breast, asparagus, roasted beets, tomato", p:51},
+        {t:"Shrimp, white beans, sautéed chard, garlic", p:53},
+        {t:"Lamb loin, chickpeas, garlicky kale, walnuts", p:53},
+        {t:"Roast haddock, freekeh, wilted arugula, lemon", p:52},
+      ]},
+      snack: { label:"Snack", time:"15:00", variants:[
+        {t:"Greek yogurt, walnuts, cinnamon", p:26},
+        {t:"Skyr, blueberries", p:25},
+        {t:"Cottage cheese, pumpkin seeds, cherries", p:24},
+        {t:"Sardines, tomato, lemon", p:24},
+        {t:"Anchovies, white beans, olive oil", p:22},
+        {t:"Halloumi, feta, watermelon, pistachios", p:25},
+      ]},
+      dinner: { label:"Dinner", time:"19:00", variants:[
+        {t:"Atlantic mackerel, roasted beets, sautéed beet greens, garlic", p:50},
+        {t:"Salmon, farro, sautéed chard, olive oil", p:54},
+        {t:"Ground turkey, sautéed beet greens, tomato, olive oil", p:48},
+        {t:"Pork tenderloin, garlicky kale, roasted beets, olive oil", p:51},
+        {t:"Grilled octopus, white beans, sautéed spinach, olive oil", p:55},
+        {t:"Chicken thigh, sautéed chard, roasted beets, garlic, olive oil", p:51},
+      ]},
+    },
+    5: {  // fri
+      breakfast: { label:"Breakfast", time:"8:00", variants:[
+        {t:"3 eggs, steel-cut oats, sautéed spinach, walnuts", p:35},
+        {t:"Skyr, almonds, banana, chia", p:35},
+        {t:"Greek yogurt, pistachios, figs, sourdough", p:33},
+        {t:"Cottage cheese, walnuts, rice cakes, banana", p:32},
+        {t:"2 eggs, halloumi, sourdough, tomato", p:35},
+        {t:"Sardines, sourdough, tomato, avocado, walnuts", p:34},
+      ]},
+      lunch: { label:"Lunch", time:"12:00", variants:[
+        {t:"Chicken thigh, jasmine rice, sautéed chard", p:52},
+        {t:"Salmon, farro, sautéed spinach, tomato, olive oil", p:49},
+        {t:"Shrimp, bulgur, roasted beets, garlic, lemon", p:50},
+        {t:"Sirloin, roasted root vegetables, herbs, lemon, olive oil", p:51},
+        {t:"Pollock, broccoli, quinoa, olive oil, lemon", p:51},
+        {t:"Lamb loin, white beans, garlicky kale, olive oil, herbs", p:50},
+      ]},
+      snack: { label:"Pre-class", time:"17:00", variants:[
+        {t:"Kefir, watermelon, walnuts", p:15},
+        {t:"Cottage cheese, pomegranate seeds, walnuts", p:18},
+        {t:"Ricotta, orange, almonds", p:21},
+        {t:"Labneh, walnuts, orange", p:15},
+        {t:"Milk, banana, almond butter", p:16},
+        {t:"2 eggs, orange, olives", p:15},
+      ]},
+      shake: { label:"Mid-session", time:"20:00", flag:"⚠️ don't skip", variants:[
+        {t:"Whey, milk, blended", p:32},
+        {t:"Skyr, milk, blended", p:32},
+        {t:"Greek yogurt, milk, cinnamon, blended", p:30},
+        {t:"Cottage cheese, banana, chia, blended", p:30},
+        {t:"Kefir, almond butter, chia, banana, hemp hearts, blended", p:31},
+        {t:"Milk, almond butter, banana, hemp hearts, chia, blended", p:30},
+      ]},
+      dinner: { label:"Dinner, late", time:"22:00", variants:[
+        {t:"Chicken sausage, white beans, garlicky kale", p:34},
+        {t:"Merguez, chickpeas, sautéed chard, tomato", p:33},
+        {t:"Sardines, white beans, sautéed spinach, tomato, olive oil", p:37},
+        {t:"Salmon, sautéed chard, lemon, olive oil", p:39},
+        {t:"3 eggs, halloumi, garlicky kale, tomato", p:37},
+        {t:"Canned salmon, sautéed spinach, tomato, olive oil, herbs", p:41},
+      ]},
+    },
+    6: {  // sat
+      breakfast: { label:"Post-yoga", time:"11:00", variants:[
+        {t:"3 eggs, Greek yogurt, watermelon, olive oil", p:43},
+        {t:"Skyr, 2 eggs, orange, blackberries", p:40},
+        {t:"Cottage cheese, 2 eggs, blueberries, watermelon", p:41},
+        {t:"Chicken sausage, 3 eggs, sautéed spinach, tomato, olive oil", p:47},
+        {t:"Sardines, 2 eggs, sautéed chard, tomato, chia", p:45},
+        {t:"Whey, hemp hearts, walnuts, blueberries, watermelon", p:41},
+      ]},
+      lunch: { label:"Lunch", time:"13:00", variants:[
+        {t:"Pollock, garlicky kale, olive oil, lemon", p:43},
+        {t:"Salmon, lentils, sautéed spinach, olive oil, lemon", p:49},
+        {t:"Shrimp, asparagus, tomato, garlic, olive oil", p:45},
+        {t:"Turkey breast, roasted beets, sautéed chard, lemon, olive oil", p:50},
+        {t:"Chicken thigh, brussels sprouts, lemon, herbs, olive oil", p:48},
+        {t:"Lamb loin, garlicky kale, chickpeas, garlic, olive oil", p:49},
+      ]},
+      snack: { label:"Snack", time:"16:00", variants:[
+        {t:"Greek yogurt, walnuts, cherries", p:28},
+        {t:"Skyr, chia", p:28},
+        {t:"Cottage cheese, pumpkin seeds, walnuts", p:26},
+        {t:"3 eggs, almonds", p:25},
+        {t:"Sardines, walnuts, tomato", p:28},
+        {t:"Labneh, almond butter, pumpkin seeds", p:26},
+      ]},
+      dinner: { label:"Dinner", time:"19:00", variants:[
+        {t:"Sirloin, roasted root vegetables, garlicky kale, garlic, olive oil", p:55},
+        {t:"Salmon, white beans, sautéed chard, olive oil", p:54},
+        {t:"Grilled octopus, chickpeas, sautéed spinach, olive oil", p:54},
+        {t:"Lamb loin, white beans, roasted beets, walnuts, olive oil", p:53},
+        {t:"Chicken thigh, brussels sprouts, walnuts, olive oil", p:52},
+        {t:"Atlantic mackerel, bulgur, sautéed beet greens, olive oil", p:53},
+      ]},
+    },
+  };
+  /* ==== END GENERATED MEAL BANK ==== */
+
+  /* The daily protein target. The nudge is computed against the total actually
+     on screen rather than a hardcoded list of days, because rerolling changes
+     the total: a day that clears the target by default can drop under it after
+     a few rerolls, and a static list would never notice. */
+  var PROTEIN_TARGET = 150;
+
+  var NON_NEGOTIABLES = [
+    "<strong>Protein target — 150g+.</strong>",
+    "<strong>10-min walk after each meal.</strong>",
+    "<strong>Extra dairy</strong> — 1 cup cottage cheese or Greek yogurt, on top of the meals above.",
+    "<strong>Be heavy-handed with olive oil and nuts</strong> — you're chasing a surplus.",
+    "<strong>Cook your greens</strong> — no raw salad during the Cyclospora outbreak.",
+    "<strong>No added sugar.</strong>",
+    "Plate order: <strong>vegetables + protein first, starch last. Never eat carbs naked.</strong>"
+  ];
+
+  /* ------------------------------------------------------------------ *
+   * ENGINE 1: the week counter. Single source of truth for everything.
+   * ------------------------------------------------------------------ */
+  var ANCHOR = new Date(2026, 6, 19);           // local 2026-07-19, a Sunday
+  var MS_PER_DAY = 86400000;
+
+  /* Counts whole local calendar days. Subtracting two local Dates directly
+     would be off by an hour across a DST boundary and could shift the week
+     number by a day. Normalising through Date.UTC on the y/m/d parts avoids it. */
+  function dayIndex(d){
+    return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / MS_PER_DAY);
+  }
+
+  /* Dev hook: ?date=YYYY-MM-DD overrides "today". Ignored when absent or
+     malformed, so normal use is untouched. */
+  function resolveToday(){
+    var q = null;
+    try {
+      q = new URLSearchParams(window.location.search).get("date");
+    } catch (err) {
+      q = null;                                  // very old browser, fall through to the real date
+    }
+    if (q && /^\d{4}-\d{2}-\d{2}$/.test(q)) {
+      var parts = q.split("-");
+      var y = +parts[0], m = +parts[1], d = +parts[2];
+      var override = new Date(y, m - 1, d);
+      if (override.getFullYear() === y && override.getMonth() === m - 1 && override.getDate() === d) {
+        return override;
+      }
+    }
+    var now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  var TODAY = resolveToday();
+  var weekCounter = Math.floor((dayIndex(TODAY) - dayIndex(ANCHOR)) / 7);
+  var seed = Math.max(weekCounter, 0);
+
+  /* ------------------------------------------------------------------ *
+   * ENGINE 2: menu rotation. Same seed, salted per slot so slots rotate
+   * out of phase instead of the whole day flipping together.
+   * ------------------------------------------------------------------ */
+  function h(str){
+    var n = 0;
+    for (var i = 0; i < str.length; i++) { n = (n * 31 + str.charCodeAt(i)) | 0; }
+    return Math.abs(n);
+  }
+
+  var STORE_KEY = "dst.rerollOffsets";
+  var rerollOffset = loadOffsets();
+
+  function loadOffsets(){
+    try {
+      var raw = window.localStorage.getItem(STORE_KEY);
+      if (!raw) { return {}; }
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === "object") ? parsed : {};
+    } catch (err) {
+      return {};                                 // private mode or corrupt value: fall back to the week default
+    }
+  }
+
+  function saveOffsets(){
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify(rerollOffset));
+    } catch (err) {
+      /* Storage unavailable or full. The reroll still applies for this page
+         view, it just will not survive a reload. Not worth interrupting for. */
+    }
+  }
+
+  function slotId(dayKey, slotKey){ return dayKey + "|" + slotKey; }
+
+  function shownIndex(dayKey, slotKey, len){
+    var base = (seed + h(slotId(dayKey, slotKey))) % len;
+    var off = rerollOffset[slotId(dayKey, slotKey)] || 0;
+    return (base + off) % len;
+  }
+
+  function shownVariant(dayIdx, slotKey){
+    var slot = MEALS[dayIdx][slotKey];
+    return slot.variants[shownIndex(DAYS[dayIdx].key, slotKey, slot.variants.length)];
+  }
+
+  /* ------------------------------------------------------------------ *
+   * ENGINE 3: the rowing ramp. Same seed, so menu and ramp stay in lockstep.
+   * ------------------------------------------------------------------ */
+  var rampIdx = Math.min(seed, 7);
+  var rampComplete = seed > 7;
+
+  function rowMinutes(kind){ return kind === "long" ? RAMP[rampIdx][0] : RAMP[rampIdx][1]; }
+
+  /* ------------------------------------------------------------------ *
+   * Rendering
+   * ------------------------------------------------------------------ */
+  var STRIP_ORDER = [1, 2, 3, 4, 5, 6, 0];       // Mon first, the way a week reads
+  var SHORT_NAMES = { 0:"Sun", 1:"Mon", 2:"Tue", 3:"Wed", 4:"Thu", 5:"Fri", 6:"Sat" };
+
+  var todayIdx = TODAY.getDay();
+  var selectedIdx = todayIdx;
+
+  var el = {
+    eyebrow:  document.getElementById("eyebrow"),
+    dayTitle: document.getElementById("dayTitle"),
+    dayDate:  document.getElementById("dayDate"),
+    chipMenu: document.getElementById("chipMenu"),
+    chipRamp: document.getElementById("chipRamp"),
+    strip:    document.getElementById("dayStrip"),
+    main:     document.getElementById("main"),
+    reset:    document.getElementById("resetBtn")
+  };
+
+  /* Each exercise links to a YouTube search rather than a fixed video: a search
+     survives a video being taken down, and it costs no bundled data. `q` exists
+     because the card's wording is not always the searchable name of the
+     movement (a "household weight row" is a dumbbell row to YouTube). Nothing is
+     fetched until the link is tapped, so the page still works offline. */
+  function ytLink(x){
+    return '<a class="ex" target="_blank" rel="noopener noreferrer"' +
+           ' href="https://www.youtube.com/results?search_query=' +
+           encodeURIComponent(x.q || x.n) + '">' + esc(x.n) + "</a>";
+  }
+
+  function exItem(x){
+    return ytLink(x) + (x.d ? ' <span class="dose">' + esc(x.d) + "</span>" : "");
+  }
+
+  function esc(s){
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  /* The calendar date of `dayIdx` inside the week currently being viewed.
+     Only used for the header line when previewing another day. */
+  function dateOf(dayIdx){
+    var delta = dayIdx - todayIdx;
+    var d = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + delta);
+    return d;
+  }
+
+  function formatDate(d){
+    var months = ["January","February","March","April","May","June","July",
+                  "August","September","October","November","December"];
+    var weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    return weekdays[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+  }
+
+  function renderHeader(){
+    var day = DAYS[selectedIdx];
+    el.eyebrow.textContent = (selectedIdx === todayIdx) ? "Today" : "Previewing";
+    el.dayTitle.textContent = day.name + " — " + day.theme;
+    el.dayDate.textContent = formatDate(dateOf(selectedIdx));
+    el.chipMenu.textContent = "Menu Week " + (seed + 1);
+    el.chipRamp.textContent = "Ramp Week " + (rampIdx + 1) + (rampComplete ? " (held)" : "");
+  }
+
+  function renderStrip(){
+    el.strip.innerHTML = "";
+    STRIP_ORDER.forEach(function(idx){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "day" + (idx === todayIdx ? " is-today" : "");
+      b.setAttribute("aria-pressed", String(idx === selectedIdx));
+      b.innerHTML = esc(SHORT_NAMES[idx]) + '<span class="dot"></span>';
+      b.addEventListener("click", function(){
+        selectedIdx = idx;
+        render();
+        window.scrollTo(0, 0);
+      });
+      el.strip.appendChild(b);
+    });
+  }
+
+  function workoutHtml(){
+    var day = DAYS[selectedIdx];
+    var w = day.workout;
+    var out = '<section class="card"><h2>Workout</h2>';
+    out += '<div class="title">' + esc(w.title) + '</div>';
+
+    var sub = [];
+    if (w.duration)  { sub.push(w.duration); }
+    if (w.structure) { sub.push(w.structure); }
+    if (sub.length)  { out += '<div class="sub">' + esc(sub.join(" · ")) + '</div>'; }
+    if (w.headline)  { out += '<div class="sub">' + esc(w.headline) + '</div>'; }
+
+    if (w.exercises && w.exercises.length) {
+      out += '<div class="block"><ul>';
+      w.exercises.forEach(function(x){ out += "<li>" + exItem(x) + "</li>"; });
+      out += "</ul>";
+      if (w.finisher) {
+        out += '<p class="cues">' + esc(w.finisher.label) + ": " + exItem(w.finisher) + "</p>";
+      }
+      out += "</div>";
+    }
+
+    if (w.breath) {
+      out += '<div class="block"><div class="label">' + esc(w.breath.title) + "</div><ul>";
+      w.breath.items.forEach(function(x){ out += "<li>" + exItem(x) + "</li>"; });
+      out += "</ul></div>";
+    }
+
+    if (w.rows) {
+      var mins = rowMinutes(w.rows);
+      out += '<div class="block"><div class="label">Row · ' + (w.rows === "long" ? "long" : "short") + '</div>';
+      out += '<div class="title">' + mins + ' min</div>';
+      if (rampComplete) {
+        out += '<div class="note">Ramp complete — holding at Week 8. Time to reassess or restart.</div>';
+      }
+      out += '<p class="cues">' + esc(ROW_CUES) + "</p></div>";
+    }
+
+    if (w.warning) { out += '<div class="note">' + esc(w.warning) + "</div>"; }
+    if (w.context) { out += '<div class="note ctx">' + esc(w.context) + "</div>"; }
+    day.notes.forEach(function(n){ out += '<div class="note">' + esc(n) + "</div>"; });
+
+    out += "</section>";
+    return out;
+  }
+
+  function mealCardHtml(slotKey){
+    var day = DAYS[selectedIdx];
+    var slot = MEALS[selectedIdx][slotKey];
+    var v = shownVariant(selectedIdx, slotKey);
+    var many = slot.variants.length > 1;
+    var idx = shownIndex(day.key, slotKey, slot.variants.length);
+
+    var head = esc(slot.label) + " · " + esc(slot.time) + (slot.flag ? " " + slot.flag : "");
+    var out = '<article class="card" data-slot="' + esc(slotKey) + '">';
+    out += '<div class="meal"><div class="meal-body">';
+    out += '<div class="slot">' + head + "</div>";
+    out += '<div class="meal-text">' + esc(v.t) + "</div>";
+    out += '</div><span class="badge">≈ ' + v.p + "g</span></div>";
+    if (many) {
+      out += '<button class="reroll" type="button" data-reroll="' + esc(slotKey) + '">' +
+             "↻ Reroll" + '<span class="variant-of">' + (idx + 1) + " of " + slot.variants.length + "</span></button>";
+    }
+    out += "</article>";
+    return out;
+  }
+
+  function dayTotal(){
+    var sum = 0;
+    Object.keys(MEALS[selectedIdx]).forEach(function(slotKey){
+      sum += shownVariant(selectedIdx, slotKey).p;
+    });
+    return sum;
+  }
+
+  function totalHtml(){
+    var total = dayTotal();
+    var isLow = total < PROTEIN_TARGET;
+    var out = '<section class="card" id="totalCard"><h2>Day protein</h2>';
+    out += '<div class="total"><span class="big">≈ ' + total + 'g</span>' +
+           '<span class="goal">target 150g+</span></div>';
+    if (isLow) {
+      out += '<div class="dairy">⚠️ Under target by ' + (PROTEIN_TARGET - total) +
+             'g. <strong>The extra dairy adds ~25g → ~' + (total + 25) +
+             "g.</strong> Today it is not optional.</div>";
+    } else {
+      out += '<div class="dairy">Clears the target on the meals alone. The extra dairy is on ' +
+             "top, for the surplus: ~" + (total + 25) + "g.</div>";
+    }
+    out += "</section>";
+    return out;
+  }
+
+  function mealsHtml(){
+    return Object.keys(MEALS[selectedIdx]).map(mealCardHtml).join("");
+  }
+
+  function staticHtml(){
+    var out = '<section class="card"><h2>Daily non-negotiables</h2><ul>';
+    NON_NEGOTIABLES.forEach(function(n){ out += "<li>" + n + "</li>"; });
+    out += "</ul></section>";
+
+    return out;
+  }
+
+  function render(){
+    renderHeader();
+    renderStrip();
+    el.main.innerHTML = workoutHtml() + mealsHtml() + totalHtml() + staticHtml();
+    wireRerolls();
+  }
+
+  /* A reroll re-renders only its own card and the running total, per the spec.
+     Everything else on the page is left alone. Replacing a card discards its
+     listener along with the node, so the fresh button is rewired each time. */
+  function wireRerolls(){
+    var buttons = el.main.querySelectorAll("[data-reroll]");
+    Array.prototype.forEach.call(buttons, function(btn){
+      btn.addEventListener("click", onReroll);
+    });
+  }
+
+  function onReroll(){
+    var slotKey = this.getAttribute("data-reroll");
+    var id = slotId(DAYS[selectedIdx].key, slotKey);
+    rerollOffset[id] = (rerollOffset[id] || 0) + 1;
+    saveOffsets();
+
+    var card = el.main.querySelector('[data-slot="' + slotKey + '"]');
+    if (card) {
+      card.outerHTML = mealCardHtml(slotKey);
+      var fresh = el.main.querySelector('[data-reroll="' + slotKey + '"]');
+      if (fresh) { fresh.addEventListener("click", onReroll); }
+    }
+    var totalCard = document.getElementById("totalCard");
+    if (totalCard) { totalCard.outerHTML = totalHtml(); }
+  }
+
+  el.reset.addEventListener("click", function(){
+    rerollOffset = {};
+    saveOffsets();
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
