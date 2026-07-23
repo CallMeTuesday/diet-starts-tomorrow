@@ -39,7 +39,9 @@ const COMPONENTS = {
   salmon6:          { label: "salmon (6oz)",                p: 42, g:170, hg:0.022 },
   salmon5:          { label: "salmon (5oz)",                p: 35, g:142, hg:0.022 },
   mackerel6:        { label: "Atlantic mackerel (6oz)",     p: 43, g:170, hg:0.050 },
-  sardineTin:       { label: "sardines (1 tin)",            p: 23, g: 92, hg:0.013 },
+  /* No sardines. The owner does not eat them, so the component is gone rather
+   * than merely unused: leaving it here invites a future meal to reach for it.
+   * Anchovies stay, so the bank keeps a tinned, low-mercury, high-omega-3 fish. */
   anchovyTin:       { label: "anchovies (1 tin)",           p: 14, g: 50, hg:0.017 },
   tunaCanned5:      { label: "canned skipjack tuna (5oz)",  p: 35, g:142, hg:0.126 },
   shrimp6:          { label: "shrimp (6oz)",                p: 41, g:170, hg:0.009 },
